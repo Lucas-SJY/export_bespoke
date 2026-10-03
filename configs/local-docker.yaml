@@ -1,0 +1,62 @@
+# Bespoke-Stratos span labeling in local Docker; only the model is remote.
+#
+# Generate tasks WITHOUT --shared-image or --registry, so each task builds its own
+# image from environment/Dockerfile (pinned images are for the Kubernetes path):
+#   uv run bespoke-stratos-traj-analysis --limit 20
+#
+# Run from the setup_bespoke root (see README.md for the environment variables):
+#   uv run --project "$HARBOR_DIR" harbor run --config configs/local-docker.yaml
+
+jobs_dir: jobs
+n_attempts: 1
+# Scales every task's agent/verifier timeout_sec. task.toml sets agent
+# timeout_sec = 1800; 2.0 -> 3600s (60 min) to avoid qwen3-small timing out.
+timeout_multiplier: 2.0
+
+n_concurrent_trials: 4
+quiet: false
+
+environment:
+  type: docker
+  force_build: true
+  delete: true
+  env:
+    OPENAI_API_KEY: ${OPENAI_API_KEY}
+    OPENAI_BASE_URL: ${OPENAI_BASE_URL}
+
+agents:
+  - name: opencode
+    # Custom provider id: opencode routes the built-in "openai" id through the
+    # Responses API (/v1/responses), which the NRP gateway rejects whenever an
+    # assistant turn mixes text with a tool call. A non-"openai" id with the
+    # openai-compatible SDK uses /v1/chat/completions instead.
+    model_name: nrp/qwen3-small
+    # Agent-level env is resolved from the host shell (unlike environment.env,
+    # which reaches the container as literal "${...}" strings). The opencode
+    # config's {env:...} interpolation below reads these at runtime.
+    env:
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      OPENAI_BASE_URL: ${OPENAI_BASE_URL}
+    kwargs:
+      opencode_config:
+        provider:
+          nrp:
+            npm: "@ai-sdk/openai-compatible"
+            name: NRP
+            options:
+              baseURL: "{env:OPENAI_BASE_URL}"
+              apiKey: "{env:OPENAI_API_KEY}"
+            models:
+              # Key MUST match the model id after "nrp/" (model_name is
+              # nrp/qwen3-small), otherwise the contextLength is ignored and
+              # opencode falls back to its default window.
+              qwen3-small:
+                contextLength: 131072
+                options:
+                  max_tokens: 65536
+
+artifacts:
+  - /output/labels.json
+
+datasets:
+  - path: datasets/bespoke-stratos-traj-analysis

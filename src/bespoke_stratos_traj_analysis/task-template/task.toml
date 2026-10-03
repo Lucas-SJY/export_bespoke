@@ -1,0 +1,24 @@
+schema_version = "1.0"
+
+[task]
+name = "bespoke-stratos-traj-analysis/{task_name}"
+
+[verifier]
+network_mode = "public"
+timeout_sec = 60
+
+# 1800s keeps a trial (agent + verifier) far below the NRP 6-hour cap on pods
+# that run without a controller, even with timeout_multiplier = 2.0.
+[agent]
+network_mode = "public"
+timeout_sec = 1800
+
+# NRP resource-usage thresholds do not apply to pods requesting 1 CPU core and
+# 2GB memory, so these requests are deliberately kept at that exemption point.
+# storage_mb is set so the Kubernetes environment emits an ephemeral-storage
+# request; the NRP job config pins every limit to its request.
+[environment]
+cpus = 1
+memory_mb = 2048
+storage_mb = 10240
+{docker_image_line}

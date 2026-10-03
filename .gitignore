@@ -1,0 +1,13 @@
+# Generated tasks (one directory per row, plus the shared-image build context)
+datasets/
+
+# Harbor job output, written relative to the directory harbor runs from
+jobs/
+
+# Exported annotations
+output/
+
+.venv/
+__pycache__/
+*.egg-info/
+.ruff_cache/

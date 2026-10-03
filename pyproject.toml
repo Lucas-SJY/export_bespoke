@@ -1,0 +1,22 @@
+[project]
+name = "harbor-bespoke-stratos-traj-analysis-adapter"
+version = "0.1.0"
+description = "Harbor adapter for bespokelabs/Bespoke-Stratos-17k"
+requires-python = ">=3.12"
+dependencies = [
+    "datasets>=2.16.1",
+]
+
+[project.scripts]
+bespoke-stratos-traj-analysis = "bespoke_stratos_traj_analysis.main:main"
+
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["bespoke_stratos_traj_analysis", "bespoke_stratos_traj_analysis.*"]
+
+[tool.setuptools.package-data]
+bespoke_stratos_traj_analysis = ["task-template/**/*"]
